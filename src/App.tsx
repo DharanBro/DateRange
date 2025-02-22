@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { DateRangePicker } from './components/DateRangePicker/DateRangePicker'
 import { DateRange, DateMessage } from './components/DateRangePicker/types'
+import { TableExample } from './components/Example/TableExample'
 
 const App: React.FC = () => {
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -27,18 +28,11 @@ const App: React.FC = () => {
   ]
 
   return (
-    <div>
-      <h1>Date Range Picker Demo</h1>
-      <DateRangePicker
-        value={dateRange}
-        onChange={setDateRange}
-        maxDays={7}
-        maxPastDays={90}
-        timezone="Asia/Calcutta"
-        dateMessages={dateMessages}
-        enableTimeSelection={true}
-      />
-      <pre>{JSON.stringify(dateRange, null, 2)}</pre>
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8">Table Component Demo</h1>
+        <TableExample />
+      </div>
     </div>
   )
 }

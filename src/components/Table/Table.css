@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .table-container {
+    @apply w-full overflow-x-auto shadow-sm rounded-lg;
+  }
+
+  .table-header {
+    @apply bg-gray-100 text-gray-700 font-semibold;
+  }
+
+  .table-header th {
+    @apply px-4 py-2 text-left border-b border-gray-200;
+  }
+
+  .table-row {
+    @apply hover:bg-gray-50 transition-colors;
+  }
+
+  .table-cell {
+    @apply px-4 py-2 border-b border-gray-200;
+  }
+
+  .filter-input {
+    @apply w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500;
+  }
+} 
