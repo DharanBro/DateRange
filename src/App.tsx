@@ -3,7 +3,7 @@ import { Table } from './components/Table/Table';
 import { fetchTableData, TableData } from './services/mockApi';
 import { DateTimeUtils } from './utils/DateTimeUtils';
 import { DateRangePicker } from './components/DateRangePicker/DateRangePicker';
-import { DateRange } from './components/DateRangePicker/types';
+import { DateRange, DateMessage } from './components/DateRangePicker/types';
 import { createColumnHelper } from '@tanstack/react-table';
 
 const columnHelper = createColumnHelper<TableData>();
@@ -15,6 +15,36 @@ const App: React.FC = () => {
   });
   const [data, setData] = useState<TableData[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Demo date messages
+  const dateMessages: DateMessage[] = [
+    {
+      date: '2025-02-14',
+      message: "Valentine's Day - High traffic expected"
+    },
+    {
+      date: '2025-02-28',  // Note: 2025 is not a leap year
+      message: "Month-end maintenance"
+    },
+    {
+      date: '2025-03-17',
+      message: "St. Patrick's Day - Limited availability"
+    },
+    // Disable specific dates
+    {
+      date: '2025-02-15',
+      message: "System maintenance",
+      disabled: true
+    },
+    // Disable a range of dates
+    ...Array.from({ length: 5 }).map((_, index) => ({
+      date: DateTimeUtils.formatDateToYYYYMMDD(new Date(2025, 2, 10 + index), Intl.DateTimeFormat().resolvedOptions().timeZone), // March 10-14
+      message: "System upgrade period",
+      disabled: true
+    }))
+  ];
+
+  console.log('dateMessages', dateMessages);
 
   const columns = [
     columnHelper.accessor('id', {
@@ -86,6 +116,7 @@ const App: React.FC = () => {
           maxDays={90}
           maxPastDays={90}
           timezone={Intl.DateTimeFormat().resolvedOptions().timeZone}
+          dateMessages={dateMessages}
         />
       </div>
       <div className="flex-1 overflow-hidden">

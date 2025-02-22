@@ -6,7 +6,7 @@ export interface DateRange {
 export interface DateMessage {
   date: string; // ISO date string
   message: string;
-  disabled: boolean;
+  disabled?: boolean;
 }
 
 export interface DateRangePickerProps {

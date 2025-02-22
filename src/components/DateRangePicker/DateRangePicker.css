@@ -106,21 +106,8 @@
   cursor: pointer;
 }
 
-.date-input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-  background-color: white;
-}
-
 .calendar-popup {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  z-index: 100;
+  @apply z-10;
   background-color: white;
   border: 1px solid #e2e8f0;
   border-radius: 4px;
@@ -132,7 +119,34 @@
 }
 
 .calendar-day.has-message {
-  @apply cursor-help text-blue-600 font-medium;
+  @apply cursor-help text-blue-600 font-medium border-dashed border-2 border-blue-300 bg-blue-50;
+}
+
+/* Selected states */
+.calendar-day.has-message.selected-start,
+.calendar-day.has-message.selected-end {
+  @apply text-white border-white bg-blue-600;
+}
+
+/* In-range states */
+.calendar-day.has-message.in-range,
+.calendar-day.has-message.in-preview-range {
+  @apply text-blue-800 bg-blue-100 border-blue-300;
+}
+
+/* Disabled state */
+.calendar-day.has-message.disabled {
+  @apply text-gray-400 border-gray-300 bg-gray-50;
+}
+
+/* Hover states */
+.calendar-day.has-message:not(.disabled):hover {
+  @apply border-blue-400 bg-blue-100;
+}
+
+.calendar-day.has-message.selected-start:hover,
+.calendar-day.has-message.selected-end:hover {
+  @apply bg-blue-600 border-white;
 }
 
 .date-message-tooltip {
@@ -219,4 +233,8 @@
 
 .calendar-actions {
   @apply flex justify-end gap-2 mt-4 pt-4 border-t border-gray-200;
+}
+
+.date-range-input .input-icon {
+  color: #6b7280;
 }

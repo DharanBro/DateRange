@@ -23,7 +23,6 @@ export function ColumnFilter<T>({
       type={isNumericFilter ? "number" : "text"}
       icon={<SearchIcon className="h-4 w-4" />}
       clearable
-      className="h-8"
     />
   );
 } 

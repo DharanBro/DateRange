@@ -16,17 +16,17 @@ export class DateRangePickerUtils {
     });
   }
 
-  static isDateDisabled(date: Date, maxPastDays: number, dateMessages: DateMessage[]): boolean {
+  static isDateDisabled(date: Date, maxPastDays: number, dateMessages: DateMessage[], timezone: string): boolean {
     const pastLimit = DateTimeUtils.addDays(new Date(), -maxPastDays);
     if (date < pastLimit) return true;
-
-    const dateStr = DateTimeUtils.toISOString(date).split('T')[0];
+    const dateStr = DateTimeUtils.formatDateToYYYYMMDD(date, timezone);
     const messageObj = dateMessages.find(msg => msg.date === dateStr);
     return messageObj?.disabled || false;
   }
 
-  static getDateMessage(date: Date, dateMessages: DateMessage[]): string | null {
-    const dateStr = DateTimeUtils.toISOString(date).split('T')[0];
+  static getDateMessage(date: Date, dateMessages: DateMessage[], timezone: string): string | null {
+    const dateStr = DateTimeUtils.formatDateToYYYYMMDD(date, timezone);
+    console.log('dateStr', dateStr);
     const messageObj = dateMessages.find(msg => msg.date === dateStr);
     return messageObj?.message ?? null;
   }

@@ -8,6 +8,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   clearable?: boolean;
   onClear?: () => void;
   containerClassName?: string;
+  readOnly?: boolean;
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(

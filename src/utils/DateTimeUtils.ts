@@ -83,4 +83,8 @@ export class DateTimeUtils {
       hour12: false,
     }).replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+):(\d+)/, '$3-$1-$2 $4:$5:$6');
   }
+
+  static formatDateToYYYYMMDD(date: Date, timezone: string): string {
+    return this.formatWithTimezone(date, timezone).split(' ')[0];
+  }
 } 

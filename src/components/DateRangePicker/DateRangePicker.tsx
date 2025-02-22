@@ -1,10 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { DateRange, DateRangePickerProps } from './types';
 import { Calendar } from './Calendar';
 import { TimeSelection } from './TimeSelection';
 import { DateTimeUtils } from '../../utils/DateTimeUtils';
 import { DateRangePickerUtils } from './dateRangeUtils';
 import { Button } from '../Button/Button';
+import { Input } from '../Input/Input';
+import { CalendarIcon } from 'lucide-react';
 import './DateRangePicker.css';
 
 export const DateRangePicker: React.FC<DateRangePickerProps> = ({
@@ -22,17 +25,31 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   const [showTimeSelection, setShowTimeSelection] = useState(enableTimeSelection);
   const calendarRef = useRef<HTMLDivElement>(null);
   const [internalValue, setInternalValue] = useState<DateRange>(value);
+  const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
+  const inputRef = useRef<HTMLDivElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setInternalValue(value);
   }, [value]);
+
+  // Update popup position when calendar opens
+  useEffect(() => {
+    if (isCalendarOpen && inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setPopupPosition({
+        top: rect.bottom + window.scrollY + 4, // 4px gap
+        left: rect.left + window.scrollX
+      });
+    }
+  }, [isCalendarOpen]);
 
   const formatDisplayDate = (dateStr: string | null): string => {
     return DateRangePickerUtils.formatDisplayDate(dateStr, timezone, enableTimeSelection);
   };
 
   const handleDateClick = (date: Date) => {
-    if (DateRangePickerUtils.isDateDisabled(date, maxPastDays, dateMessages)) return;
+    if (DateRangePickerUtils.isDateDisabled(date, maxPastDays, dateMessages, timezone)) return;
 
     let newRange: DateRange = { ...internalValue };
     const defaultStartTime = '00:00:00';
@@ -92,10 +109,14 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
     setIsCalendarOpen(false);
   };
 
-  // Close calendar when clicking outside
+  // Update click outside handler to check both refs
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const isInputClick = inputRef.current?.contains(target);
+      const isPopupClick = popupRef.current?.contains(target);
+      
+      if (!isInputClick && !isPopupClick) {
         setIsCalendarOpen(false);
       }
     };
@@ -109,20 +130,28 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
       <div
         className="date-range-input"
         onClick={() => setIsCalendarOpen(true)}
+        ref={inputRef}
       >
-        <input
-          type="text"
+        <Input
           readOnly
+          icon={<CalendarIcon size={18} />}
           placeholder="Select date range"
           value={internalValue.startDate || internalValue.endDate ? 
             `${formatDisplayDate(internalValue.startDate)} - ${formatDisplayDate(internalValue.endDate)}` :
             ''}
-          className="date-input"
         />
       </div>
 
-      {isCalendarOpen && (
-        <div className="calendar-popup">
+      {isCalendarOpen && createPortal(
+        <div 
+          className="calendar-popup"
+          style={{
+            position: 'absolute',
+            top: `${popupPosition.top}px`,
+            left: `${popupPosition.left}px`
+          }}
+          ref={popupRef}
+        >
           <div className="date-range-picker">
             <Calendar
               currentMonth={currentMonth}
@@ -132,7 +161,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
               onDateClick={handleDateClick}
               onMonthChange={setCurrentMonth}
               isDateDisabled={(date) => DateRangePickerUtils.isDateDisabled(date, maxPastDays, dateMessages)}
-              getDateMessage={(date) => DateRangePickerUtils.getDateMessage(date, dateMessages)}
+              getDateMessage={(date) => DateRangePickerUtils.getDateMessage(date, dateMessages, timezone)}
               hoveredDate={hoveredDate}
               onDateHover={setHoveredDate}
               onDateLeave={() => setHoveredDate(null)}
@@ -180,7 +209,8 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
