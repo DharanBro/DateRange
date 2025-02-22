@@ -55,6 +55,10 @@ export class DateTimeUtils {
     return result;
   }
 
+  static subtractDays(date: Date, days: number): Date {
+    return this.addDays(date, -days);
+  }
+
   static daysDifference(date1: Date, date2: Date): number {
     return Math.ceil(Math.abs(date1.getTime() - date2.getTime()) / (1000 * 60 * 60 * 24));
   }
@@ -65,5 +69,18 @@ export class DateTimeUtils {
 
   static toISOString(date: Date): string {
     return date.toISOString();
+  }
+
+  static formatWithTimezone(date: Date, timezone: string): string {
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZone: timezone,
+      hour12: false,
+    }).replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+):(\d+)/, '$3-$1-$2 $4:$5:$6');
   }
 } 

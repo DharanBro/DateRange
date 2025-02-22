@@ -14,42 +14,43 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowUpIcon, ArrowDownIcon, ArrowUpDownIcon } from "lucide-react";
 import { ColumnFilter } from "./ColumnFilter";
-import { cn } from "../../utils/cn"
+import { cn } from "../../utils/cn";
+import Loader from "../Loader/Loader";
+import "./Table.css";
 
 interface TableProps<T extends object> {
-  readonly data: T[]
-  readonly columns: ColumnDef<T>[]
-  readonly enableMultiSort?: boolean
-  readonly containerClassName?: string
-  readonly rowHeight?: number
-  readonly tableHeight?: number
-  readonly onRowClick?: (row: T) => void
+  readonly data: T[];
+  readonly columns: ColumnDef<T, any>[];
+  readonly enableMultiSort?: boolean;
+  readonly containerClassName?: string;
+  readonly rowHeight?: number;
+  readonly tableHeight?: number;
+  readonly onRowClick?: (row: T) => void;
+  readonly loading?: boolean;
 }
 
 // Custom filter functions
 const numericFilter: FilterFn<unknown> = (row, columnId, value) => {
-  const cellValue = row.getValue(columnId)
-  if (value === undefined || value === "") return true
-  if (cellValue == null) return false
-  
-  return Number(cellValue) === Number(value)
-}
+  const cellValue = row.getValue(columnId);
+  if (value === undefined || value === "") return true;
+  if (cellValue == null) return false;
+
+  return Number(cellValue) === Number(value);
+};
 
 const stringFilter: FilterFn<unknown> = (row, columnId, value) => {
-  const cellValue = row.getValue(columnId)
-  if (value === undefined || value === "") return true
-  if (cellValue == null) return false
-  
-  return String(cellValue)
-    .toLowerCase()
-    .includes(String(value).toLowerCase())
-}
+  const cellValue = row.getValue(columnId);
+  if (value === undefined || value === "") return true;
+  if (cellValue == null) return false;
+
+  return String(cellValue).toLowerCase().includes(String(value).toLowerCase());
+};
 
 const NoRowsOverlay = () => (
-  <div className="absolute inset-0 flex items-center justify-center bg-white/50">
-    <div className="text-sm text-gray-500">No results found</div>
+  <div className="table-no-rows">
+    <div className="table-no-rows-text">No results found</div>
   </div>
-)
+);
 
 export function Table<T extends object>({
   data,
@@ -59,10 +60,11 @@ export function Table<T extends object>({
   rowHeight = 45,
   tableHeight = 400,
   onRowClick,
+  loading = false,
 }: TableProps<T>) {
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = useState({})
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState({});
 
   const table = useReactTable({
     data,
@@ -85,23 +87,24 @@ export function Table<T extends object>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-  })
+  });
 
   const { rows } = table.getRowModel();
 
   const parentRef = React.useRef<HTMLDivElement>(null);
 
-  const headerHeight = 100
-  const minTableHeight = 150 // Minimum height to show "No Results" message
-  
+  const headerHeight = 100;
+  const minTableHeight = 150; // Minimum height to show "No Results" message
+
   // Calculate actual content height (header + rows)
-  const contentHeight = rows.length > 0 
-    ? (rows.length * rowHeight) + headerHeight
-    : minTableHeight + headerHeight
+  const contentHeight =
+    rows.length > 0
+      ? rows.length * rowHeight + headerHeight
+      : minTableHeight + headerHeight;
 
-  const effectiveHeight = Math.min(tableHeight, contentHeight)
+  const effectiveHeight = contentHeight > tableHeight ? "100%" : Math.min(tableHeight, contentHeight);
 
-  console.log({effectiveHeight, contentHeight, rows, rowHeight})
+  console.log({ effectiveHeight, contentHeight, rows, rowHeight });
 
   const virtualizer = useVirtualizer({
     count: rows.length,
@@ -119,49 +122,120 @@ export function Table<T extends object>({
       : 0;
 
   const getSortingIcon = (isSorted: false | string) => {
-    if (!isSorted) return <ArrowUpDownIcon className="w-3.5 h-3.5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+    if (!isSorted) return <ArrowUpDownIcon className="table-sort-icon" />;
     return isSorted === "asc" ? (
-      <ArrowUpIcon className="w-3.5 h-3.5 text-gray-700" />
+      <ArrowUpIcon className="table-sort-icon-active" />
     ) : (
-      <ArrowDownIcon className="w-3.5 h-3.5 text-gray-700" />
-    )
-  }
+      <ArrowDownIcon className="table-sort-icon-active" />
+    );
+  };
 
   const handleSort = (e: React.MouseEvent, column: Column<T>) => {
-    const handler = column.getToggleSortingHandler()
-    if (!handler) return
-    
-    const isMultiSort = e.metaKey || e.ctrlKey
-    column.toggleSorting(undefined, isMultiSort)
-  }
+    const handler = column.getToggleSortingHandler();
+    if (!handler) return;
+
+    const isMultiSort = e.metaKey || e.ctrlKey;
+    column.toggleSorting(undefined, isMultiSort);
+  };
+
+  const renderTableBody = () => {
+    if (loading) {
+      return (
+        <tr>
+          <td colSpan={columns.length} className="table-loading-cell">
+            <Loader />
+          </td>
+        </tr>
+      );
+    }
+
+    if (rows.length === 0) {
+      return (
+        <tr>
+          <td colSpan={columns.length} className="table-loading-cell">
+            <NoRowsOverlay />
+          </td>
+        </tr>
+      );
+    }
+
+    return (
+      <>
+        {paddingTop > 0 && (
+          <tr>
+            <td style={{ height: `${paddingTop}px` }} />
+          </tr>
+        )}
+        {virtualRows.map((virtualRow, rowIndex) => {
+          const row = rows[virtualRow.index];
+          const isLastRow = rowIndex === virtualRows.length - 1 && !paddingBottom;
+          
+          return (
+            <tr
+              key={row.id}
+              onClick={() => onRowClick?.(row.original)}
+              className={cn(
+                "table-row",
+                onRowClick && "table-row-clickable",
+                isLastRow && "table-row-last"
+              )}
+            >
+              {row.getVisibleCells().map((cell, index) => (
+                <td
+                  key={cell.id}
+                  className={cn(
+                    "table-cell",
+                    index === 0 && "table-cell-first",
+                    index === row.getVisibleCells().length - 1 && "table-cell-last"
+                  )}
+                >
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </td>
+              ))}
+            </tr>
+          );
+        })}
+        {paddingBottom > 0 && (
+          <tr>
+            <td style={{ height: `${paddingBottom}px` }} />
+          </tr>
+        )}
+      </>
+    );
+  };
 
   return (
-    <div className={cn("rounded-md border border-gray-200 bg-white", containerClassName)}>
+    <div className={cn("table-container", containerClassName)}>
       <div
         ref={parentRef}
         style={{ height: effectiveHeight }}
-        className="relative overflow-auto"
+        className="table-scroll-container"
       >
-        <table className="w-full border-collapse table-auto border-gray-200">
+        <table className="table">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
+                {headerGroup.headers.map((header, index) => (
                   <th
                     key={header.id}
-                    className="sticky top-0 z-10 bg-gray-100 border-r border-gray-200 last:border-r-0 text-left"
+                    className={cn(
+                      "table-header",
+                      index === 0 && "table-header-first",
+                      index === headerGroup.headers.length - 1 && "table-header-last"
+                    )}
                   >
-                    <div className="px-4 py-3">
+                    <div className="table-header-content">
                       <div
                         className={cn(
-                          "flex items-center gap-2 h-8 group",
-                          header.column.getCanSort() && "cursor-pointer hover:text-gray-900"
+                          "table-header-sort",
+                          header.column.getCanSort() && "table-header-sort-enabled"
                         )}
                         onClick={(e) =>
-                          header.column.getCanSort() && handleSort(e, header.column)
+                          header.column.getCanSort() &&
+                          handleSort(e, header.column)
                         }
                       >
-                        <span className="text-sm font-medium text-gray-700">
+                        <span className="table-header-text">
                           {flexRender(
                             header.column.columnDef.header,
                             header.getContext()
@@ -173,11 +247,13 @@ export function Table<T extends object>({
                       {header.column.getCanFilter() ? (
                         <ColumnFilter
                           column={header.column}
-                          columnFilterValue={header.column.getFilterValue() as string}
+                          columnFilterValue={
+                            header.column.getFilterValue() as string
+                          }
                           setFilterValue={header.column.setFilterValue}
                         />
                       ) : (
-                        <div className="h-8" />
+                        <div className="table-filter-spacer" />
                       )}
                     </div>
                   </th>
@@ -185,58 +261,11 @@ export function Table<T extends object>({
               </tr>
             ))}
           </thead>
-          <tbody className="divide-y divide-gray-200">
-            {rows.length > 0 ? (
-              <>
-                {paddingTop > 0 && (
-                  <tr>
-                    <td style={{ height: `${paddingTop}px` }} />
-                  </tr>
-                )}
-                {virtualRows.map((virtualRow) => {
-                  const row = rows[virtualRow.index]
-                  return (
-                    <tr
-                      key={row.id}
-                      onClick={() => onRowClick?.(row.original)}
-                      className={cn(
-                        "hover:bg-gray-50/50 transition-colors",
-                        onRowClick && "cursor-pointer"
-                      )}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <td
-                          key={cell.id}
-                          className="px-4 py-3 border-r border-gray-200 last:border-r-0 text-sm text-gray-600"
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                  )
-                })}
-                {paddingBottom > 0 && (
-                  <tr>
-                    <td style={{ height: `${paddingBottom}px` }} />
-                  </tr>
-                )}
-              </>
-            ) : (
-              <tr>
-                <td 
-                  colSpan={columns.length}
-                  className="relative h-[150px]" // Match minTableHeight
-                >
-                  <NoRowsOverlay />
-                </td>
-              </tr>
-            )}
+          <tbody className="table-body">
+            {renderTableBody()}
           </tbody>
         </table>
       </div>
     </div>
-  )
+  );
 }

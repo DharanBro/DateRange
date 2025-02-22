@@ -1,9 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { DateRange, DateRangePickerProps } from './types';
 import { Calendar } from './Calendar';
 import { TimeSelection } from './TimeSelection';
 import { DateTimeUtils } from '../../utils/DateTimeUtils';
 import { DateRangePickerUtils } from './dateRangeUtils';
+import { Button } from '../Button/Button';
 import './DateRangePicker.css';
 
 export const DateRangePicker: React.FC<DateRangePickerProps> = ({
@@ -20,6 +21,11 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [showTimeSelection, setShowTimeSelection] = useState(enableTimeSelection);
   const calendarRef = useRef<HTMLDivElement>(null);
+  const [internalValue, setInternalValue] = useState<DateRange>(value);
+
+  useEffect(() => {
+    setInternalValue(value);
+  }, [value]);
 
   const formatDisplayDate = (dateStr: string | null): string => {
     return DateRangePickerUtils.formatDisplayDate(dateStr, timezone, enableTimeSelection);
@@ -28,53 +34,62 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   const handleDateClick = (date: Date) => {
     if (DateRangePickerUtils.isDateDisabled(date, maxPastDays, dateMessages)) return;
 
-    let newRange: DateRange = { ...value };
+    let newRange: DateRange = { ...internalValue };
     const defaultStartTime = '00:00:00';
     const defaultEndTime = '23:59:59';
 
-    if (!value.startDate || (value.startDate && value.endDate)) {
+    if (!internalValue.startDate || (internalValue.startDate && internalValue.endDate)) {
       newRange = {
         startDate: DateTimeUtils.updateDateWithTimeInTimezone(date, defaultStartTime, timezone),
         endDate: null
       };
+      setInternalValue(newRange);
     } else {
-      const startDate = new Date(value.startDate);
+      const startDate = new Date(internalValue.startDate);
       if (date < startDate) {
         newRange.startDate = DateTimeUtils.updateDateWithTimeInTimezone(date, defaultStartTime, timezone);
-        const existingTime = DateTimeUtils.retrieveTimeInTimezone(value.startDate, timezone);
+        const existingTime = DateTimeUtils.retrieveTimeInTimezone(internalValue.startDate, timezone);
         newRange.endDate = DateTimeUtils.updateDateWithTimeInTimezone(startDate, existingTime || defaultEndTime, timezone);
       } else {
         const daysDiff = DateTimeUtils.daysDifference(date, startDate);
         if (daysDiff > maxDays) return;
         newRange.endDate = DateTimeUtils.updateDateWithTimeInTimezone(date, defaultEndTime, timezone);
       }
-    }
-
-    onChange(newRange);
-    if (newRange.endDate) {
-      setIsCalendarOpen(false);
+      setInternalValue(newRange);
     }
   };
 
   const handleTimeChange = (type: 'start' | 'end', timeStr: string) => {
-    if (!value.startDate || !value.endDate) return;
+    if (!internalValue.startDate || !internalValue.endDate) return;
 
-    const newRange = { ...value };
+    const newRange = { ...internalValue };
     if (type === 'start') {
       newRange.startDate = DateTimeUtils.updateDateWithTimeInTimezone(
-        new Date(value.startDate),
+        new Date(internalValue.startDate),
         timeStr,
         timezone
       );
     } else {
       newRange.endDate = DateTimeUtils.updateDateWithTimeInTimezone(
-        new Date(value.endDate),
+        new Date(internalValue.endDate),
         timeStr,
         timezone
       );
     }
 
-    onChange(newRange);
+    setInternalValue(newRange);
+  };
+
+  const handleApply = () => {
+    if (internalValue.startDate && internalValue.endDate) {
+      onChange(internalValue);
+      setIsCalendarOpen(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setInternalValue(value);
+    setIsCalendarOpen(false);
   };
 
   // Close calendar when clicking outside
@@ -99,8 +114,8 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
           type="text"
           readOnly
           placeholder="Select date range"
-          value={value.startDate || value.endDate ? 
-            `${formatDisplayDate(value.startDate)} - ${formatDisplayDate(value.endDate)}` :
+          value={internalValue.startDate || internalValue.endDate ? 
+            `${formatDisplayDate(internalValue.startDate)} - ${formatDisplayDate(internalValue.endDate)}` :
             ''}
           className="date-input"
         />
@@ -111,7 +126,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
           <div className="date-range-picker">
             <Calendar
               currentMonth={currentMonth}
-              value={value}
+              value={internalValue}
               maxDays={maxDays}
               timezone={timezone}
               onDateClick={handleDateClick}
@@ -124,21 +139,21 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
             />
 
             <div className="selected-range">
-              {value.startDate && (
+              {internalValue.startDate && (
                 <div className="mb-1">
-                  Start: {formatDisplayDate(value.startDate)}
+                  Start: {formatDisplayDate(internalValue.startDate)}
                 </div>
               )}
-              {value.endDate && (
+              {internalValue.endDate && (
                 <div>
-                  End: {formatDisplayDate(value.endDate)}
+                  End: {formatDisplayDate(internalValue.endDate)}
                 </div>
               )}
             </div>
 
             {enableTimeSelection && (
               <TimeSelection
-                value={value}
+                value={internalValue}
                 timezone={timezone}
                 showTimeSelection={showTimeSelection}
                 onTimeSelectionToggle={setShowTimeSelection}
@@ -146,6 +161,24 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 getTimeFromISO={(date) => DateTimeUtils.retrieveTimeInTimezone(date, timezone)}
               />
             )}
+
+            <div className="calendar-actions">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleCancel}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="primary" 
+                size="sm" 
+                onClick={handleApply}
+                disabled={!internalValue.startDate || !internalValue.endDate}
+              >
+                Apply
+              </Button>
+            </div>
           </div>
         </div>
       )}

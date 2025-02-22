@@ -5,3 +5,7 @@
 @layer components {
   /* Your DateRangePicker.css contents go here */
 }
+
+html, body, #root {
+  height: 100%;
+}

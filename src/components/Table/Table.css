@@ -4,23 +4,103 @@
 
 @layer components {
   .table-container {
-    @apply w-full overflow-x-auto shadow-sm rounded-lg;
+    @apply bg-white h-full;
+  }
+
+  .table-scroll-container {
+    @apply relative overflow-auto;
+  }
+
+  .table {
+    @apply w-full border-collapse table-auto;
   }
 
   .table-header {
-    @apply bg-gray-100 text-gray-700 font-semibold;
+    @apply sticky top-0 z-10 bg-gray-100 border-r border-gray-200 text-left;
   }
 
-  .table-header th {
-    @apply px-4 py-2 text-left border-b border-gray-200;
+  .table-header-first {
+    @apply border-l border-gray-200;
+  }
+
+  .table-header-last {
+    @apply !border-r border-gray-200;
+  }
+
+  .table-header-content {
+    @apply px-4 py-3;
+  }
+
+  .table-header-sort {
+    @apply flex items-center gap-2 h-8;
+  }
+
+  .table-header-sort.group {
+    @apply flex items-center gap-2 h-8;
+  }
+
+  .table-header-sort-enabled {
+    @apply cursor-pointer hover:text-gray-900;
+  }
+
+  .table-header-text {
+    @apply text-sm font-medium text-gray-700;
+  }
+
+  .table-sort-icon {
+    @apply w-3.5 h-3.5 text-gray-400 opacity-0 transition-opacity;
+  }
+
+  .group:hover .table-sort-icon {
+    @apply opacity-100;
+  }
+
+  .table-sort-icon-active {
+    @apply w-3.5 h-3.5 text-gray-700;
+  }
+
+  .table-filter-spacer {
+    @apply h-8;
+  }
+
+  .table-body {
+    @apply divide-y divide-gray-200;
   }
 
   .table-row {
-    @apply hover:bg-gray-50 transition-colors;
+    @apply hover:bg-gray-50/50 transition-colors;
+  }
+
+  .table-row-clickable {
+    @apply cursor-pointer;
+  }
+
+  .table-row-last {
+    @apply !border-b border-gray-200;
   }
 
   .table-cell {
-    @apply px-4 py-2 border-b border-gray-200;
+    @apply px-4 py-3 border-r border-gray-200 text-sm text-gray-600;
+  }
+
+  .table-cell-first {
+    @apply border-l border-gray-200;
+  }
+
+  .table-cell-last {
+    @apply !border-r border-gray-200;
+  }
+
+  .table-loading-cell {
+    @apply relative h-[150px] border-l border-r border-gray-200;
+  }
+
+  .table-no-rows {
+    @apply absolute inset-0 flex items-center justify-center bg-white/50;
+  }
+
+  .table-no-rows-text {
+    @apply text-sm text-gray-500;
   }
 
   .filter-input {

@@ -1,0 +1,32 @@
+.input-container {
+  @apply relative flex items-center w-full;
+}
+
+.input-icon {
+  @apply absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none;
+}
+
+.input-base {
+  @apply w-full rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 placeholder:text-gray-400;
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/20;
+}
+
+.input-with-icon {
+  @apply pl-8;
+}
+
+.input-with-clear {
+  @apply pr-8;
+}
+
+.clear-button-container {
+  @apply absolute right-2 top-1/2 -translate-y-1/2 flex items-center;
+}
+
+.clear-button {
+  @apply flex items-center justify-center text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600;
+}
+
+.clear-icon {
+  @apply h-4 w-4;
+} 
