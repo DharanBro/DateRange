@@ -9,7 +9,7 @@ export class DateTimeUtils {
     }).format(dateObj);
   }
 
-  static getTimeInTimezone(date: Date | string | null, timezone: string): string {
+  static retrieveTimeInTimezone(date: Date | string | null, timezone: string): string {
     if (!date) return '00:00';
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     
@@ -21,7 +21,7 @@ export class DateTimeUtils {
     });
   }
 
-  static setTimeInTimezone(date: Date, time: string, timezone: string): string {
+  static updateDateWithTimeInTimezone(date: Date, time: string, timezone: string): string {
     const [hours, minutes, seconds = '0'] = time.split(':');
     
     // Create date in specified timezone

@@ -34,19 +34,19 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
     if (!value.startDate || (value.startDate && value.endDate)) {
       newRange = {
-        startDate: DateTimeUtils.setTimeInTimezone(date, defaultStartTime, timezone),
+        startDate: DateTimeUtils.updateDateWithTimeInTimezone(date, defaultStartTime, timezone),
         endDate: null
       };
     } else {
       const startDate = new Date(value.startDate);
       if (date < startDate) {
-        newRange.startDate = DateTimeUtils.setTimeInTimezone(date, defaultStartTime, timezone);
-        const existingTime = DateTimeUtils.getTimeInTimezone(value.startDate, timezone);
-        newRange.endDate = DateTimeUtils.setTimeInTimezone(startDate, existingTime || defaultEndTime, timezone);
+        newRange.startDate = DateTimeUtils.updateDateWithTimeInTimezone(date, defaultStartTime, timezone);
+        const existingTime = DateTimeUtils.retrieveTimeInTimezone(value.startDate, timezone);
+        newRange.endDate = DateTimeUtils.updateDateWithTimeInTimezone(startDate, existingTime || defaultEndTime, timezone);
       } else {
         const daysDiff = DateTimeUtils.daysDifference(date, startDate);
         if (daysDiff > maxDays) return;
-        newRange.endDate = DateTimeUtils.setTimeInTimezone(date, defaultEndTime, timezone);
+        newRange.endDate = DateTimeUtils.updateDateWithTimeInTimezone(date, defaultEndTime, timezone);
       }
     }
 
@@ -61,13 +61,13 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
     const newRange = { ...value };
     if (type === 'start') {
-      newRange.startDate = DateTimeUtils.setTimeInTimezone(
+      newRange.startDate = DateTimeUtils.updateDateWithTimeInTimezone(
         new Date(value.startDate),
         timeStr,
         timezone
       );
     } else {
-      newRange.endDate = DateTimeUtils.setTimeInTimezone(
+      newRange.endDate = DateTimeUtils.updateDateWithTimeInTimezone(
         new Date(value.endDate),
         timeStr,
         timezone
@@ -143,7 +143,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 showTimeSelection={showTimeSelection}
                 onTimeSelectionToggle={setShowTimeSelection}
                 onTimeChange={handleTimeChange}
-                getTimeFromISO={(date) => DateTimeUtils.getTimeInTimezone(date, timezone)}
+                getTimeFromISO={(date) => DateTimeUtils.retrieveTimeInTimezone(date, timezone)}
               />
             )}
           </div>
