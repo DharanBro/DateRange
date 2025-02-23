@@ -8,7 +8,7 @@ import { Button } from "../Button/Button";
 import { Input } from "../Input/Input";
 import { CalendarIcon } from "lucide-react";
 import "./DateRangePicker.css";
-import { DateUtils } from "../../utils/dateUtils";
+import { DateUtils } from "../../utils/DateUtils";
 
 export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   value,

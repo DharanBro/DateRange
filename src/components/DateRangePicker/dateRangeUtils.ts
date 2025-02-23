@@ -1,4 +1,4 @@
-import { DateUtils } from '../../utils/dateUtils';
+import { DateUtils } from '../../utils/DateUtils';
 import { DateMessage, DateRange } from './types';
 
 export class DateRangePickerUtils {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Table } from "./components/Table/Table";
 import { fetchTableData, TableData } from "./services/mockApi";
-import { DateUtils } from "./utils/dateUtils";
+import { DateUtils } from "./utils/DateUtils";
 import { DateRangePicker } from "./components/DateRangePicker/DateRangePicker";
 import { DateRange, DateMessage } from "./components/DateRangePicker/types";
 import { createColumnHelper } from "@tanstack/react-table";

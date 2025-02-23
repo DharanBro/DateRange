@@ -1,4 +1,4 @@
-import { DateUtils } from '../utils/dateUtils';
+import { DateUtils } from '../utils/DateUtils';
 
 export interface TableData {
   id: number;
