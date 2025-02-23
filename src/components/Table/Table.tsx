@@ -104,7 +104,6 @@ export function Table<T extends object>({
 
   const effectiveHeight = contentHeight > tableHeight ? "100%" : Math.min(tableHeight, contentHeight);
 
-  console.log({ effectiveHeight, contentHeight, rows, rowHeight });
 
   const virtualizer = useVirtualizer({
     count: rows.length,

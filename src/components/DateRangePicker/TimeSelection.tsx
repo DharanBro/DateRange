@@ -1,22 +1,20 @@
-import React from 'react';
-import { DateRange } from './types';
+import React from "react";
+import { DateRange } from "./types";
 
 interface TimeSelectionProps {
   value: DateRange;
-  timezone: string;
   showTimeSelection: boolean;
   onTimeSelectionToggle: (show: boolean) => void;
-  onTimeChange: (type: 'start' | 'end', time: string) => void;
-  getTimeFromISO: (isoString: string | null) => string;
+  onTimeChange: (type: "start" | "end", time: string) => void;
+  getTimeString: (date: Date | null) => string;
 }
 
 export const TimeSelection: React.FC<TimeSelectionProps> = ({
   value,
-  timezone,
   showTimeSelection,
   onTimeSelectionToggle,
   onTimeChange,
-  getTimeFromISO,
+  getTimeString,
 }) => {
   return (
     <>
@@ -27,27 +25,29 @@ export const TimeSelection: React.FC<TimeSelectionProps> = ({
             checked={showTimeSelection}
             onChange={(e) => onTimeSelectionToggle(e.target.checked)}
           />
-          Add time selection
+          <span>Add time selection</span>
         </label>
       </div>
 
       {showTimeSelection && (
         <div className="time-selection-inputs">
           <div className="time-input-group">
-            <label>From:</label>
+            <label htmlFor="time-start">From:</label>
             <input
+              id="time-start"
               type="time"
-              value={getTimeFromISO(value.startDate)}
-              onChange={(e) => onTimeChange('start', e.target.value)}
+              value={getTimeString(value.startDate)}
+              onChange={(e) => onTimeChange("start", e.target.value)}
               disabled={!value.startDate}
             />
           </div>
           <div className="time-input-group">
-            <label>To:</label>
+            <label htmlFor="time-end">To:</label>
             <input
+              id="time-end"
               type="time"
-              value={getTimeFromISO(value.endDate)}
-              onChange={(e) => onTimeChange('end', e.target.value)}
+              value={getTimeString(value.endDate)}
+              onChange={(e) => onTimeChange("end", e.target.value)}
               disabled={!value.endDate}
             />
           </div>
@@ -55,4 +55,4 @@ export const TimeSelection: React.FC<TimeSelectionProps> = ({
       )}
     </>
   );
-}; 
+};

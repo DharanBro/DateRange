@@ -86,11 +86,9 @@ export const Tooltip: React.FC<TooltipProps> = ({
       role='tooltip'
       ref={wrapperRef}
       onMouseEnter={() => {
-        console.log('mouse enter');
         setIsVisible(true);
       }}
       onMouseLeave={() => {
-        console.log('mouse leave');
         setIsVisible(false);
       }}
       className={wrapperClassName}

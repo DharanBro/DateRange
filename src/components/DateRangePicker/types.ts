@@ -1,10 +1,10 @@
 export interface DateRange {
-  startDate: string | null; // ISO datetime string
-  endDate: string | null; // ISO datetime string
+  startDate: Date | null;
+  endDate: Date | null;
 }
 
 export interface DateMessage {
-  date: string; // ISO date string
+  date: Date;
   message: string;
   disabled?: boolean;
 }
@@ -15,6 +15,9 @@ export interface DateRangePickerProps {
   maxDays?: number;
   maxPastDays?: number;
   timezone?: string;
-  dateMessages?: DateMessage[];
+  dateMessages?: Array<{
+    date: Date;
+    message: string;
+  }>;
   enableTimeSelection?: boolean;
 } 

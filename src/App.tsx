@@ -1,86 +1,96 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { Table } from './components/Table/Table';
-import { fetchTableData, TableData } from './services/mockApi';
-import { DateTimeUtils } from './utils/DateTimeUtils';
-import { DateRangePicker } from './components/DateRangePicker/DateRangePicker';
-import { DateRange, DateMessage } from './components/DateRangePicker/types';
-import { createColumnHelper } from '@tanstack/react-table';
+import React, { useEffect, useState, useCallback } from "react";
+import { Table } from "./components/Table/Table";
+import { fetchTableData, TableData } from "./services/mockApi";
+import { DateUtils } from "./utils/dateUtils";
+import { DateRangePicker } from "./components/DateRangePicker/DateRangePicker";
+import { DateRange, DateMessage } from "./components/DateRangePicker/types";
+import { createColumnHelper } from "@tanstack/react-table";
 
 const columnHelper = createColumnHelper<TableData>();
 
+const TIMEZONES = [
+  "UTC",
+  "America/New_York",
+  "America/Los_Angeles",
+  "Europe/London",
+  "Asia/Tokyo",
+  "Asia/Calcutta",
+  "Australia/Sydney",
+];
+
 const App: React.FC = () => {
+  const today = DateUtils.getDate();
   const [dateRange, setDateRange] = useState<DateRange>({
-    startDate: DateTimeUtils.toISOString(DateTimeUtils.subtractDays(new Date(), 7)),
-    endDate: DateTimeUtils.toISOString(new Date()),
+    startDate: DateUtils.getDate(DateUtils.subtract(today, "day", 7), {
+      startOfDay: true,
+    }),
+    endDate: DateUtils.getDate(today, { endOfDay: true }),
   });
   const [data, setData] = useState<TableData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedTimezone, setSelectedTimezone] = useState(
+    Intl.DateTimeFormat().resolvedOptions().timeZone
+  );
 
   // Demo date messages
   const dateMessages: DateMessage[] = [
     {
-      date: '2025-02-14',
-      message: "Valentine's Day - High traffic expected"
+      date: new Date(2025, 1, 14), // Feb 14, 2025
+      message: "Valentine's Day - High traffic expected",
     },
     {
-      date: '2025-02-28',  // Note: 2025 is not a leap year
-      message: "Month-end maintenance"
+      date: new Date(2025, 1, 28), // Feb 28, 2025
+      message: "Month-end maintenance",
     },
     {
-      date: '2025-03-17',
-      message: "St. Patrick's Day - Limited availability"
+      date: new Date(2025, 2, 17), // March 17, 2025
+      message: "St. Patrick's Day - Limited availability",
     },
     // Disable specific dates
     {
-      date: '2025-02-15',
+      date: new Date(2025, 1, 15), // Feb 15, 2025
       message: "System maintenance",
-      disabled: true
+      disabled: true,
     },
     // Disable a range of dates
     ...Array.from({ length: 5 }).map((_, index) => ({
-      date: DateTimeUtils.formatDateToYYYYMMDD(new Date(2025, 2, 10 + index), Intl.DateTimeFormat().resolvedOptions().timeZone), // March 10-14
+      date: new Date(2025, 2, 10 + index), // March 10-14
       message: "System upgrade period",
-      disabled: true
-    }))
+      disabled: true,
+    })),
   ];
 
-  console.log('dateMessages', dateMessages);
-
   const columns = [
-    columnHelper.accessor('id', {
-      header: 'ID',
-      cell: info => info.getValue(),
+    columnHelper.accessor("id", {
+      header: "ID",
+      cell: (info) => info.getValue(),
       enableSorting: true,
       enableColumnFilter: false,
     }),
-    columnHelper.accessor('name', {
-      header: 'Name',
-      cell: info => info.getValue(),
+    columnHelper.accessor("name", {
+      header: "Name",
+      cell: (info) => info.getValue(),
       enableSorting: true,
       enableColumnFilter: true,
     }),
-    columnHelper.accessor('email', {
-      header: 'Email',
-      cell: info => info.getValue(),
+    columnHelper.accessor("email", {
+      header: "Email",
+      cell: (info) => info.getValue(),
       enableSorting: true,
       enableColumnFilter: true,
     }),
-    columnHelper.accessor('status', {
-      header: 'Status',
-      cell: info => info.getValue(),
+    columnHelper.accessor("status", {
+      header: "Status",
+      cell: (info) => info.getValue(),
       enableSorting: true,
       enableColumnFilter: true,
     }),
-    columnHelper.accessor('date', {
-      header: 'Date',
-      cell: info => DateTimeUtils.formatDate(info.getValue(), {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-      }),
+    columnHelper.accessor("date", {
+      header: "Date",
+      cell: (info) => {
+        const date = new Date(info.getValue());
+        return DateUtils.formatDate(date, true, selectedTimezone);
+      },
       enableSorting: true,
       enableColumnFilter: false,
     }),
@@ -88,24 +98,44 @@ const App: React.FC = () => {
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    const params = {
+      startDate: DateUtils.formatForAPI(dateRange.startDate, selectedTimezone),
+      endDate: DateUtils.formatForAPI(dateRange.endDate, selectedTimezone),
+      timezone: selectedTimezone,
+    };
     try {
-      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const data = await fetchTableData({
-        startDate: dateRange.startDate ?? '',
-        endDate: dateRange.endDate ?? '',
-        timezone,
-      });
+      const data = await fetchTableData(params);
+      console.log("params", params);
       setData(data);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
-  }, [dateRange]);
+  }, [dateRange, selectedTimezone]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    setDateRange((prev) => {
+      const updatedDateRange = { ...prev };
+      if (prev.startDate) {
+        updatedDateRange.startDate = DateUtils.setTimezone(
+          prev.startDate,
+          selectedTimezone
+        );
+    }
+      if (prev.endDate) {
+        updatedDateRange.endDate = DateUtils.setTimezone(
+          prev.endDate,
+          selectedTimezone
+        );
+      }
+      return updatedDateRange;
+    });
+  }, [selectedTimezone]);
 
   return (
     <div className="p-4 flex flex-col gap-4 h-full">
@@ -113,18 +143,26 @@ const App: React.FC = () => {
         <DateRangePicker
           value={dateRange}
           onChange={setDateRange}
-          maxDays={90}
+          maxDays={10}
           maxPastDays={90}
-          timezone={Intl.DateTimeFormat().resolvedOptions().timeZone}
+          timezone={selectedTimezone}
           dateMessages={dateMessages}
+          enableTimeSelection={true}
         />
+        <select
+          className="p-2 border rounded-md"
+          value={selectedTimezone}
+          onChange={(e) => setSelectedTimezone(e.target.value)}
+        >
+          {TIMEZONES.map((tz) => (
+            <option key={tz} value={tz}>
+              {tz.replace("_", " ")}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="flex-1 overflow-hidden">
-        <Table
-          data={data}
-          columns={columns}
-          loading={loading}
-        />
+        <Table data={data} columns={columns} loading={loading} />
       </div>
     </div>
   );

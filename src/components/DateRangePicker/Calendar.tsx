@@ -2,12 +2,12 @@ import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Tooltip } from '../Tooltip/Tooltip';
 import { DateRange } from './types';
+import { DateUtils } from '../../utils/dateUtils';
 
 interface CalendarProps {
   currentMonth: Date;
   value: DateRange;
   maxDays: number;
-  timezone: string;
   onDateClick: (date: Date) => void;
   onMonthChange: (date: Date) => void;
   isDateDisabled: (date: Date) => boolean;
@@ -15,13 +15,13 @@ interface CalendarProps {
   hoveredDate: Date | null;
   onDateHover: (date: Date) => void;
   onDateLeave: () => void;
+  timezone: string;
 }
 
 export const Calendar: React.FC<CalendarProps> = ({
   currentMonth,
   value,
   maxDays,
-  timezone,
   onDateClick,
   onMonthChange,
   isDateDisabled,
@@ -29,6 +29,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   hoveredDate,
   onDateHover,
   onDateLeave,
+  timezone,
 }) => {
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -47,10 +48,11 @@ export const Calendar: React.FC<CalendarProps> = ({
     return days;
   };
 
-  const isDateSelected = (date: Date, dateStr: string | null): boolean => {
-    if (!dateStr) return false;
-    const selectedDate = new Date(dateStr);
-    return date.toDateString() === selectedDate.toDateString();
+  const isDateSelected = (calendarDate: Date, date: Date | null): boolean => {
+    if (!date) return false;
+    console.log("date", DateUtils.formatDate(date, true, timezone));
+    console.log("calendarDate", DateUtils.formatDate(calendarDate, true, timezone));
+    return DateUtils.isSameDay(calendarDate, date);
   };
 
   const isInPreviewRange = (date: Date): boolean => {

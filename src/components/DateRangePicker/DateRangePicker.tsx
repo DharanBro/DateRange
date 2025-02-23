@@ -1,28 +1,29 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { DateRange, DateRangePickerProps } from './types';
-import { Calendar } from './Calendar';
-import { TimeSelection } from './TimeSelection';
-import { DateTimeUtils } from '../../utils/DateTimeUtils';
-import { DateRangePickerUtils } from './dateRangeUtils';
-import { Button } from '../Button/Button';
-import { Input } from '../Input/Input';
-import { CalendarIcon } from 'lucide-react';
-import './DateRangePicker.css';
+import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { DateRange, DateRangePickerProps } from "./types";
+import { Calendar } from "./Calendar";
+import { TimeSelection } from "./TimeSelection";
+import { DateRangePickerUtils } from "./dateRangeUtils";
+import { Button } from "../Button/Button";
+import { Input } from "../Input/Input";
+import { CalendarIcon } from "lucide-react";
+import "./DateRangePicker.css";
+import { DateUtils } from "../../utils/dateUtils";
 
 export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   value,
   onChange,
   maxDays = 10,
   maxPastDays = 90,
-  timezone = 'UTC',
+  timezone = "UTC",
   dateMessages = [],
   enableTimeSelection = false,
 }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [showTimeSelection, setShowTimeSelection] = useState(enableTimeSelection);
+  const [showTimeSelection, setShowTimeSelection] =
+    useState(enableTimeSelection);
   const calendarRef = useRef<HTMLDivElement>(null);
   const [internalValue, setInternalValue] = useState<DateRange>(value);
   const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
@@ -39,59 +40,103 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
       const rect = inputRef.current.getBoundingClientRect();
       setPopupPosition({
         top: rect.bottom + window.scrollY + 4, // 4px gap
-        left: rect.left + window.scrollX
+        left: rect.left + window.scrollX,
       });
     }
   }, [isCalendarOpen]);
 
-  const formatDisplayDate = (dateStr: string | null): string => {
-    return DateRangePickerUtils.formatDisplayDate(dateStr, timezone, enableTimeSelection);
+  const formatDisplayDate = (
+    date: Date | null,
+    showOffset = false,
+    hideYear = false
+  ): string => {
+    if (!date) return "";
+
+    const dateFormat = hideYear
+      ? {
+          month: "short",
+          day: "numeric",
+          ...(enableTimeSelection && {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          timeZone: timezone,
+        }
+      : {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          ...(enableTimeSelection && {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          timeZone: timezone,
+        };
+
+    const formattedDate = new Intl.DateTimeFormat("default", dateFormat).format(
+      date
+    );
+    return showOffset
+      ? `${formattedDate} ${DateUtils.getTimezoneOffset(date, timezone)}`
+      : formattedDate;
   };
 
   const handleDateClick = (date: Date) => {
-    if (DateRangePickerUtils.isDateDisabled(date, maxPastDays, dateMessages, timezone)) return;
+    if (DateRangePickerUtils.isDateDisabled(date, maxPastDays, dateMessages))
+      return;
 
     let newRange: DateRange = { ...internalValue };
-    const defaultStartTime = '00:00:00';
-    const defaultEndTime = '23:59:59';
 
-    if (!internalValue.startDate || (internalValue.startDate && internalValue.endDate)) {
+    if (
+      !internalValue.startDate ||
+      (internalValue.startDate && internalValue.endDate)
+    ) {
       newRange = {
-        startDate: DateTimeUtils.updateDateWithTimeInTimezone(date, defaultStartTime, timezone),
-        endDate: null
+        startDate: DateUtils.getDate(date, { startOfDay: true }),
+        endDate: null,
       };
       setInternalValue(newRange);
     } else {
-      const startDate = new Date(internalValue.startDate);
-      if (date < startDate) {
-        newRange.startDate = DateTimeUtils.updateDateWithTimeInTimezone(date, defaultStartTime, timezone);
-        const existingTime = DateTimeUtils.retrieveTimeInTimezone(internalValue.startDate, timezone);
-        newRange.endDate = DateTimeUtils.updateDateWithTimeInTimezone(startDate, existingTime || defaultEndTime, timezone);
+      const startDate = internalValue.startDate;
+
+      if (DateUtils.isBefore(date, startDate)) {
+        newRange = {
+          startDate: DateUtils.getDate(date, { startOfDay: true }),
+          endDate: DateUtils.getDate(startDate, { endOfDay: true }),
+        };
       } else {
-        const daysDiff = DateTimeUtils.daysDifference(date, startDate);
+        const daysDiff = DateUtils.daysDifference(date, startDate);
         if (daysDiff > maxDays) return;
-        newRange.endDate = DateTimeUtils.updateDateWithTimeInTimezone(date, defaultEndTime, timezone);
+
+        newRange = {
+          startDate,
+          endDate: DateUtils.getDate(date, { endOfDay: true }),
+        };
       }
       setInternalValue(newRange);
     }
   };
 
-  const handleTimeChange = (type: 'start' | 'end', timeStr: string) => {
+  const handleTimeChange = (type: "start" | "end", timeStr: string) => {
     if (!internalValue.startDate || !internalValue.endDate) return;
 
     const newRange = { ...internalValue };
-    if (type === 'start') {
-      newRange.startDate = DateTimeUtils.updateDateWithTimeInTimezone(
-        new Date(internalValue.startDate),
+
+    if (type === "start") {
+      newRange.startDate = DateUtils.setTimeInDate(
+        internalValue.startDate,
         timeStr,
         timezone
       );
     } else {
-      newRange.endDate = DateTimeUtils.updateDateWithTimeInTimezone(
-        new Date(internalValue.endDate),
+      const newDate = DateUtils.setTimeInDate(
+        internalValue.endDate,
         timeStr,
         timezone
       );
+      newDate.setSeconds(59);
+      newDate.setMilliseconds(999);
+      newRange.endDate = newDate;
     }
 
     setInternalValue(newRange);
@@ -115,15 +160,25 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
       const target = event.target as Node;
       const isInputClick = inputRef.current?.contains(target);
       const isPopupClick = popupRef.current?.contains(target);
-      
+
       if (!isInputClick && !isPopupClick) {
         setIsCalendarOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const selectedDateRange =
+    internalValue.startDate || internalValue.endDate
+      ? `${formatDisplayDate(
+          internalValue.startDate,
+          false,
+          internalValue.startDate?.getFullYear() ===
+            internalValue.endDate?.getFullYear()
+        )} - ${formatDisplayDate(internalValue.endDate, true)}`
+      : "";
 
   return (
     <div className="date-range-picker-container" ref={calendarRef}>
@@ -136,82 +191,84 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
           readOnly
           icon={<CalendarIcon size={18} />}
           placeholder="Select date range"
-          value={internalValue.startDate || internalValue.endDate ? 
-            `${formatDisplayDate(internalValue.startDate)} - ${formatDisplayDate(internalValue.endDate)}` :
-            ''}
+          value={selectedDateRange}
         />
       </div>
 
-      {isCalendarOpen && createPortal(
-        <div 
-          className="calendar-popup"
-          style={{
-            position: 'absolute',
-            top: `${popupPosition.top}px`,
-            left: `${popupPosition.left}px`
-          }}
-          ref={popupRef}
-        >
-          <div className="date-range-picker">
-            <Calendar
-              currentMonth={currentMonth}
-              value={internalValue}
-              maxDays={maxDays}
-              timezone={timezone}
-              onDateClick={handleDateClick}
-              onMonthChange={setCurrentMonth}
-              isDateDisabled={(date) => DateRangePickerUtils.isDateDisabled(date, maxPastDays, dateMessages)}
-              getDateMessage={(date) => DateRangePickerUtils.getDateMessage(date, dateMessages, timezone)}
-              hoveredDate={hoveredDate}
-              onDateHover={setHoveredDate}
-              onDateLeave={() => setHoveredDate(null)}
-            />
-
-            <div className="selected-range">
-              {internalValue.startDate && (
-                <div className="mb-1">
-                  Start: {formatDisplayDate(internalValue.startDate)}
-                </div>
-              )}
-              {internalValue.endDate && (
-                <div>
-                  End: {formatDisplayDate(internalValue.endDate)}
-                </div>
-              )}
-            </div>
-
-            {enableTimeSelection && (
-              <TimeSelection
+      {isCalendarOpen &&
+        createPortal(
+          <div
+            className="calendar-popup"
+            style={{
+              position: "absolute",
+              top: `${popupPosition.top}px`,
+              left: `${popupPosition.left}px`,
+            }}
+            ref={popupRef}
+          >
+            <div className="date-range-picker">
+              <Calendar
+                currentMonth={currentMonth}
                 value={internalValue}
+                maxDays={maxDays}
+                onDateClick={handleDateClick}
+                onMonthChange={setCurrentMonth}
+                isDateDisabled={(date) =>
+                  DateRangePickerUtils.isDateDisabled(
+                    date,
+                    maxPastDays,
+                    dateMessages
+                  )
+                }
+                getDateMessage={(date) =>
+                  DateRangePickerUtils.getDateMessage(date, dateMessages)
+                }
+                hoveredDate={hoveredDate}
+                onDateHover={setHoveredDate}
+                onDateLeave={() => setHoveredDate(null)}
                 timezone={timezone}
-                showTimeSelection={showTimeSelection}
-                onTimeSelectionToggle={setShowTimeSelection}
-                onTimeChange={handleTimeChange}
-                getTimeFromISO={(date) => DateTimeUtils.retrieveTimeInTimezone(date, timezone)}
               />
-            )}
 
-            <div className="calendar-actions">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleCancel}
-              >
-                Cancel
-              </Button>
-              <Button 
-                variant="primary" 
-                size="sm" 
-                onClick={handleApply}
-                disabled={!internalValue.startDate || !internalValue.endDate}
-              >
-                Apply
-              </Button>
+              <div className="selected-range">
+                {internalValue.startDate && (
+                  <div className="mb-1">
+                    Start: {formatDisplayDate(internalValue.startDate)}
+                  </div>
+                )}
+                {internalValue.endDate && (
+                  <div>End: {formatDisplayDate(internalValue.endDate)}</div>
+                )}
+              </div>
+
+              {enableTimeSelection && (
+                <TimeSelection
+                  value={internalValue}
+                  showTimeSelection={showTimeSelection}
+                  onTimeSelectionToggle={setShowTimeSelection}
+                  onTimeChange={handleTimeChange}
+                  getTimeString={(date: Date | null) =>
+                    DateUtils.getTimeInTimezone(date, timezone)
+                  }
+                />
+              )}
+
+              <div className="calendar-actions">
+                <Button variant="outline" size="sm" onClick={handleCancel}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleApply}
+                  disabled={!internalValue.startDate || !internalValue.endDate}
+                >
+                  Apply
+                </Button>
+              </div>
             </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
-}; 
+};

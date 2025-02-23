@@ -1,41 +1,31 @@
-import { DateTimeUtils } from '../../utils/DateTimeUtils';
+import { DateUtils } from '../../utils/dateUtils';
 import { DateMessage, DateRange } from './types';
 
 export class DateRangePickerUtils {
-  static formatDisplayDate(dateStr: string | null, timezone: string, showTime: boolean = false): string {
-    return DateTimeUtils.formatDate(dateStr, {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      ...(showTime && {
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: true,
-      }),
-      timezone
-    });
-  }
 
-  static isDateDisabled(date: Date, maxPastDays: number, dateMessages: DateMessage[], timezone: string): boolean {
-    const pastLimit = DateTimeUtils.addDays(new Date(), -maxPastDays);
+  static isDateDisabled(date: Date, maxPastDays: number, dateMessages: DateMessage[]): boolean {
+    const today = new Date();
+    const pastLimit = new Date(today.setDate(today.getDate() - maxPastDays));
     if (date < pastLimit) return true;
-    const dateStr = DateTimeUtils.formatDateToYYYYMMDD(date, timezone);
-    const messageObj = dateMessages.find(msg => msg.date === dateStr);
+    
+    const messageObj = dateMessages.find(msg => 
+      DateUtils.isSameDay(msg.date, date)
+    );
     return messageObj?.disabled || false;
   }
 
-  static getDateMessage(date: Date, dateMessages: DateMessage[], timezone: string): string | null {
-    const dateStr = DateTimeUtils.formatDateToYYYYMMDD(date, timezone);
-    console.log('dateStr', dateStr);
-    const messageObj = dateMessages.find(msg => msg.date === dateStr);
+  static getDateMessage(date: Date, dateMessages: DateMessage[]): string | null {
+    const messageObj = dateMessages.find(msg => 
+      DateUtils.isSameDay(msg.date, date)
+    );
     return messageObj?.message ?? null;
   }
 
   static getDaysInMonth(date: Date): (Date | null)[] {
     const year = date.getFullYear();
     const month = date.getMonth();
-    const firstDay = DateTimeUtils.getStartOfMonth(year, month);
-    const daysInMonth = DateTimeUtils.getDaysInMonth(year, month);
+    const firstDay = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
     const startingDayOfWeek = firstDay.getDay();
     
     const days: (Date | null)[] = Array(startingDayOfWeek).fill(null);
@@ -49,8 +39,6 @@ export class DateRangePickerUtils {
 
   static isDateInRange(date: Date, range: DateRange): boolean {
     if (!range.startDate || !range.endDate) return false;
-    const start = new Date(range.startDate);
-    const end = new Date(range.endDate);
-    return date >= start && date <= end;
+    return date >= range.startDate && date <= range.endDate;
   }
 } 
