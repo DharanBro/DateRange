@@ -48,8 +48,6 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   const isDateSelected = (calendarDate: Date, date: Date | null): boolean => {
     if (!date) return false;
-    console.log("date", DateUtils.formatDate(date, true, timezone));
-    console.log("calendarDate", DateUtils.formatDate(calendarDate, true, timezone));
     return DateUtils.isSameDay(calendarDate, date);
   };
 

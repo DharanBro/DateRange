@@ -144,8 +144,6 @@ export const DateUtils = {
    * Set time for a date
    */
   setTimeInDate(date: Date, timeStr: string, timezone?: string): Date {
-    console.log("timeStr", timeStr);
-    console.log("timezone", timezone);
     return dayjs(date)
       .tz(timezone)
       .set("hour", parseInt(timeStr.split(":")[0]))
