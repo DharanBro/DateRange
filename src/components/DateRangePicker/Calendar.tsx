@@ -1,15 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Tooltip } from '../Tooltip/Tooltip';
 import { DateRange } from './types';
 import { DateUtils } from '../../utils/dateUtils';
 
 interface CalendarProps {
-  currentMonth: Date;
   value: DateRange;
   maxDays: number;
   onDateClick: (date: Date) => void;
-  onMonthChange: (date: Date) => void;
   isDateDisabled: (date: Date) => boolean;
   getDateMessage: (date: Date) => string | null;
   hoveredDate: Date | null;
@@ -19,11 +17,9 @@ interface CalendarProps {
 }
 
 export const Calendar: React.FC<CalendarProps> = ({
-  currentMonth,
   value,
   maxDays,
   onDateClick,
-  onMonthChange,
   isDateDisabled,
   getDateMessage,
   hoveredDate,
@@ -31,6 +27,8 @@ export const Calendar: React.FC<CalendarProps> = ({
   onDateLeave,
   timezone,
 }) => {
+
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -75,7 +73,7 @@ export const Calendar: React.FC<CalendarProps> = ({
           onClick={() => {
             const newDate = new Date(currentMonth);
             newDate.setMonth(currentMonth.getMonth() - 1);
-            onMonthChange(newDate);
+            setCurrentMonth(newDate);
           }}
         >
           <ChevronLeft className="w-5 h-5" />
@@ -88,7 +86,7 @@ export const Calendar: React.FC<CalendarProps> = ({
           onClick={() => {
             const newDate = new Date(currentMonth);
             newDate.setMonth(currentMonth.getMonth() + 1);
-            onMonthChange(newDate);
+            setCurrentMonth(newDate);
           }}
         >
           <ChevronRight className="w-5 h-5" />

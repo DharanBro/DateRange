@@ -19,7 +19,6 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   dateMessages = [],
   enableTimeSelection = false,
 }) => {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [showTimeSelection, setShowTimeSelection] =
@@ -208,11 +207,9 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
           >
             <div className="date-range-picker">
               <Calendar
-                currentMonth={currentMonth}
                 value={internalValue}
                 maxDays={maxDays}
                 onDateClick={handleDateClick}
-                onMonthChange={setCurrentMonth}
                 isDateDisabled={(date) =>
                   DateRangePickerUtils.isDateDisabled(
                     date,
