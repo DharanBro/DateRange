@@ -33,8 +33,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
         
         if (tooltipElement) {
           const tooltipRect = tooltipElement.getBoundingClientRect();
-          const spacing = 8; // Base spacing
-          const offset = 4; // Additional offset for all positions
+          const spacing = 8;
+          const offset = 4;
 
           const positions = {
             top: {
