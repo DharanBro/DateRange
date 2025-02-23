@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Tooltip } from '../Tooltip/Tooltip';
 import { DateRange } from './types';
-import { DateUtils } from '../../utils/dateUtils';
 
 interface CalendarProps {
   value: DateRange;
@@ -48,7 +47,23 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   const isDateSelected = (calendarDate: Date, date: Date | null): boolean => {
     if (!date) return false;
-    return DateUtils.isSameDay(calendarDate, date);
+    // TODO: This is a hack to get the date in the correct format
+    // This is due to the timezone. Fix it in a better way.
+    const actualDay = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).formatToParts(date)
+
+    const day = actualDay.find(part => part.type === 'day')?.value as string
+    const month = actualDay.find(part => part.type === 'month')?.value as string
+    const year = actualDay.find(part => part.type === 'year')?.value as string
+    
+    const isSameDay = calendarDate.getFullYear() === parseInt(year) &&  
+           calendarDate.getMonth() === parseInt(month) - 1 &&
+           calendarDate.getDate() === parseInt(day)
+    return isSameDay;
   };
 
   const isInPreviewRange = (date: Date): boolean => {

@@ -118,24 +118,6 @@ const App: React.FC = () => {
     loadData();
   }, [loadData]);
 
-  useEffect(() => {
-    setDateRange((prev) => {
-      const updatedDateRange = { ...prev };
-      if (prev.startDate) {
-        updatedDateRange.startDate = DateUtils.setTimezone(
-          prev.startDate,
-          selectedTimezone
-        );
-    }
-      if (prev.endDate) {
-        updatedDateRange.endDate = DateUtils.setTimezone(
-          prev.endDate,
-          selectedTimezone
-        );
-      }
-      return updatedDateRange;
-    });
-  }, [selectedTimezone]);
 
   return (
     <div className="p-4 flex flex-col gap-4 h-full">
